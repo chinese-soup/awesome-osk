@@ -10,7 +10,7 @@
 -- To use this module add:
 --     require("osk")
 -- to your rc.lua, and call it from a keybinding:
---     osk(position, screen)
+--     osk(position, screen, height)
 --
 -- Parameters:
 --   position - optional, "bottom" by default
@@ -47,17 +47,21 @@ kbd.codes = {
 }
 
 local function create_button_row(...)
-    local widgets = { } --layout = wibox.layout.flex.horizontal }
+    local widgets = { } 
     local arg={...}
 
     for _,i in ipairs(arg) do
         local emoji = false
-        
-        if(i:match("😂") ~= nil)  -- TODO,obviously
+       
+        if(i[1] ~= nil) -- if the argument is a table and not a string
         then
-            emoji = true
+            if(i[2] == "emoji") -- if the argument has emoji flag as table[2]
+            then
+                emoji = true
+                i = i[1]
+            end
         end
-
+            
         local ww = wibox.widget{
             markup = "<span color='#aaaaaa'>" .. i .. "</span>",
             align  = 'center',
@@ -76,7 +80,6 @@ local function create_button_row(...)
         w:buttons(util.table.join(
             button({ }, 1, 
                 function()
-                    --w:font = "Droid Sans Mono Bold 14"
                     ww.font = "Droid Sans Mono Bold 16"
                     w.bg = "#6f6f6f"
 
@@ -85,7 +88,6 @@ local function create_button_row(...)
                 function ()
                     ww.font = "Droid Sans Mono Bold 11"
                     w.bg = "#0f0f0f"
-                    --w:font = "Droid Sans Mono Bold 11"
                     if(emoji == false)
                     then
                         capi.fake_input("key_press",   kbd.codes[i])
@@ -109,35 +111,28 @@ setmetatable(_M, { __call = function (_, pos, scr, height)
     if not kbd.init then
         local l = wibox.widget {
             homogeneous   = true,
-            spacing       = 3,
+            spacing       = 2,
             min_cols_size = 10,
             min_rows_size = 3,
             layout        = wibox.layout.grid, 
         }
         
-        local table1 = create_button_row("q", "w", "e", "r", "t", "z", "u", "i", "o", "p", "Backspace", "😂")
+        local table1 = create_button_row("q", "w", "e", "r", "t", "z", "u", "i", "o", "p", "Backspace", {"😂", "emoji"}) --
         local table2 = create_button_row("a", "s", "d", "f", "g", "h", "j", "k", "l", ":", "?", "Return") 
         local table3 = create_button_row("Caps", "y", "x", "c", "Space", "v", "b", "n", "m", ".")
             
         for _,i in ipairs(table1) do
-            --great.util.spawn("notify-send 'mrdka" .. _ .. "'")
             l:add_widget_at(table1[_], 1, _, 0, 0)
         end
         
         for _,i in ipairs(table2) do
-            --great.util.spawn("notify-send 'mrdka" .. _ .. "'")
             l:add_widget_at(table2[_], 2, _, 0, 0)
         end
         
         for _,i in ipairs(table3) do
-            --great.util.spawn("notify-send 'mrdka" .. _ .. "'")
             l:add_widget_at(table3[_], 3, _, 0, 0)
         end
-<<<<<<< HEAD
         box = wibar({height = height, position = pos, screen = scr, widget = l})
-=======
-        box = wibar({height = 300, position = pos, screen = scr, widget = l})
->>>>>>> fc35aaf18acb499ff4891ed54d1e63fb44b9ff92
         
 
         kbd.init = true
