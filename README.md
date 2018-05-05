@@ -7,6 +7,10 @@ Since I use awesome wm I've looked around for some on screen keyboards, but most
 I thought about a native OSK inside the wm, so I fired up google and found [this osk for awesome 3.x](https://github.com/sigma/awesome-configs/blob/master/osk.lua).
 To nobody's surprise it didn't work on awesome 4 initially, so decided to hack it up and fix it so it works on Awesome 4 and make it a bit more easily customizable.
 
+# Disclaimer
+The code is pretty bad, as I started out with some actual Lua coding with this project and I am bad at coding in general.
+Feel free to send PRs, pro-tips & complains.
+
 # How to install
 * Put osk.lua to ~/.config/awesome
 * Add these lines to theme.lua 
