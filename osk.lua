@@ -40,9 +40,11 @@ module("osk")
 kbd = {}
 box = wibox() -- FIXME: global, because need to toggle visiblity from the outside FIXME: overcome this somehow?
 
+kbd.modifiers = {}
+
 kbd.codes = {
-    q=24,    w=25, e=26, r=27, t=28, z=29, u=30, i=31, o=32,   p=33,  Backspace=22, ["😂"]="😂",
-    a=38,    s=39, d=40, f=41, g=42, h=43, j=44, k=45, l=46, ["?"]=59, Return=36,
+    q=24,    w=25, e=26, r=27, t=28, z=29, u=30, i=31, o=32,   p=33,  ["⌫"]=22, ["Alt"]=64, ["Control"]=37, ["Alt"]=64,
+    ["Mod1"]=64, a=38,  s=39, d=40, f=41, g=42, h=43, j=44, k=45, l=46, ["?"]=59, Return=36,
     Caps=66, y=52, x=53, c=54, v=55, b=56, n=57, m=58, Space=65, Delete=22, ["."]=60,
 }
 
@@ -51,14 +53,20 @@ local function create_button_row(...)
     local arg={...}
 
     for _,i in ipairs(arg) do
-        local emoji = false
-       
+        local is_emoji = false
+        local modifier = ""
+        
         if(i[1] ~= nil) -- if the argument is a table and not a string
         then
             if(i[2] == "emoji") -- if the argument has emoji flag as table[2]
             then
-                emoji = true
+                is_emoji = true
                 i = i[1]
+            elseif(i[2] == "modifier")
+            then
+                modifier = i[1]
+                i = i[1]
+                
             end
         end
             
@@ -68,7 +76,7 @@ local function create_button_row(...)
             valign = 'center',
             forced_height = 60,
             font = "Droid Sans Mono Bold 11",
-            forced_width = 100,
+            forced_width = 80, 
             widget = wibox.widget.textbox,
         }
         
@@ -86,15 +94,44 @@ local function create_button_row(...)
                 end,
 
                 function ()
-                    ww.font = "Droid Sans Mono Bold 11"
-                    w.bg = "#0f0f0f"
-                    if(emoji == false)
+                    gears.debug.dump(kbd.modifiers)
+
+                    if(modifier == "Control" or modifier == "Alt" or modifier == "Mod4") 
                     then
+                        table.insert(kbd.modifiers, modifier)
+                        --great.key.execute({modifiers}, "w")
+                        --capi.fake_input("key_press",   kbd.codes[i])
+                    elseif(is_emoji == false)
+                    then
+                        -- great.key.execute(kbd.modifiers, i)
+                        ww.font = "Droid Sans Mono Bold 11"
+                        w.bg = "#0f0f0f"
+
+                        --if(i == "Control" or i == "Alt" or i == "Mod4") then
+                        if(kbd.modifiers ~= {})
+                        then
+                            for _, y in ipairs(kbd.modifiers) do
+                                capi.fake_input("key_press",  kbd.codes[y])    
+                                
+                            end
+                        end
+                        
                         capi.fake_input("key_press",   kbd.codes[i])
                         capi.fake_input("key_release", kbd.codes[i])
+                        
+                        if(kbd.modifiers ~= {})
+                        then
+                            for _, y in ipairs(kbd.modifiers) do
+                                capi.fake_input("key_release",  kbd.codes[y])    
+                                table.remove(kbd.modifiers, _)
+                            end
+                        end
+                        
+                        kbd.modifiers = {}
                     else
                         great.util.spawn("xdotool type " .. i ) -- fixme
-                        --great.util.spawn("xdotool type asdf")
+                        ww.font = "Droid Sans Mono Bold 11"
+                        w.bg = "#0f0f0f"
                    end
 
                 end)
@@ -117,21 +154,29 @@ setmetatable(_M, { __call = function (_, pos, scr, height)
             layout        = wibox.layout.grid, 
         }
         
-        local table1 = create_button_row("q", "w", "e", "r", "t", "z", "u", "i", "o", "p", "Backspace", {"😂", "emoji"}) --
-        local table2 = create_button_row("a", "s", "d", "f", "g", "h", "j", "k", "l", ":", "?", "Return") 
-        local table3 = create_button_row("Caps", "y", "x", "c", "Space", "v", "b", "n", "m", ".")
+        local table1 = create_button_row("q", "w", "e", "r", "t", "z", "u", "i", "o", "p", "⌫") -- TODO: what to fix is obvious
+        local table2 = create_button_row("Caps", "a", "s", "d", "f", "g", "h", "j", "k", "l", ":", "?", "Return") 
+        local table3 = create_button_row({"Control", "modifier"}, {"Mod4", "modifier"}, {"Mod1", "modifier"}, "y", "x", "c", "space", "v", "b", "n", "m", ".")
+        local emojitable = create_button_row({"😂", "emoji"}, {"🤔", "emoji"})
             
         for _,i in ipairs(table1) do
-            l:add_widget_at(table1[_], 1, _, 0, 0)
+            l:add_widget_at(table1[_], 1, _, 1, 1)
         end
         
         for _,i in ipairs(table2) do
-            l:add_widget_at(table2[_], 2, _, 0, 0)
+            l:add_widget_at(table2[_], 2, _, 1, 1)
         end
         
         for _,i in ipairs(table3) do
-            l:add_widget_at(table3[_], 3, _, 0, 0)
+            l:add_widget_at(table3[_], 3, _, 1, 1)
         end
+
+        for _,i in ipairs(emojitable) do
+            --great.util.spawn("notify-send '" .. tostring(table.getn()) .. " lol'")
+            l:add_widget_at(emojitable[_], 1, 9+5+_, 1, 1) -- TODO: get row length+x
+        end
+
+        
         box = wibar({height = height, position = pos, screen = scr, widget = l})
         
 
