@@ -43,9 +43,9 @@ box = wibox() -- FIXME: global, because need to toggle visiblity from the outsid
 kbd.modifiers = {}
 
 kbd.codes = {
-    q=24,    w=25, e=26, r=27, t=28, z=29, u=30, i=31, o=32,   p=33,  ["⌫"]=22, ["Alt"]=64, ["Control"]=37, ["Alt"]=64,
-    ["Mod1"]=64, a=38,  s=39, d=40, f=41, g=42, h=43, j=44, k=45, l=46, ["?"]=59, Return=36,
-    Caps=66, y=52, x=53, c=54, v=55, b=56, n=57, m=58, Space=65, Delete=22, ["."]=60,
+    q=24,  w=25, e=26, r=27, t=28, z=29, u=30, i=31, o=32,   p=33,  ["⌫"]=22, ["Alt"]=64, ["Mod4"]=133, ["Control"]=37, ["Alt"]=64, 
+    a=38,  s=39, d=40, f=41, g=42, h=43, j=44, k=45, l=46, ["?"]=59, Return=36,
+    Caps=66, y=52, x=53, c=54, v=55, b=56, n=57, m=58, Space=65, Delete=22, ["."]=60, ["Up"]=22,
 }
 
 local function create_button_row(...)
@@ -123,6 +123,7 @@ local function create_button_row(...)
                         then
                             for _, y in ipairs(kbd.modifiers) do
                                 capi.fake_input("key_release",  kbd.codes[y])    
+                                -- widgets[y]["font"] = "Droid Sans Mono Bold 9"
                                 table.remove(kbd.modifiers, _)
                             end
                         end
@@ -155,8 +156,8 @@ setmetatable(_M, { __call = function (_, pos, scr, height)
         }
         
         local table1 = create_button_row("q", "w", "e", "r", "t", "z", "u", "i", "o", "p", "⌫") -- TODO: what to fix is obvious
-        local table2 = create_button_row("Caps", "a", "s", "d", "f", "g", "h", "j", "k", "l", ":", "?", "Return") 
-        local table3 = create_button_row({"Control", "modifier"}, {"Mod4", "modifier"}, {"Mod1", "modifier"}, "y", "x", "c", "space", "v", "b", "n", "m", ".")
+        local table2 = create_button_row("Caps", "a", "s", "d", "f", "g", "h", "j", "k", "l", ":", "?", "Return", "Up") 
+        local table3 = create_button_row({"Control", "modifier"}, {"Mod4", "modifier"}, {"Alt", "modifier"}, "y", "x", "c", "space", "v", "b", "n", "m", ".", "Left", "Down", "Right")
         local emojitable = create_button_row({"😂", "emoji"}, {"🤔", "emoji"})
             
         for _,i in ipairs(table1) do
