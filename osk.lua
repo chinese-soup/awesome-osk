@@ -14,7 +14,7 @@
 --
 -- Parameters:
 --   position - optional, "bottom" by default
---   screen   - optional, screen.count() by default -- TODO: FIX
+--   screen   - optional, screen.count() by default 
 ----------------------------------------------------
 
 local beautiful = require("beautiful")
@@ -24,6 +24,7 @@ local wibox    = require("wibox")
 local button   = require("awful.button")
 local gears = require("gears")
 local table    = table
+local gtable = require("gears.table")
 local wibar = require("awful.wibar")
 local widget = require("awful.widget")
 local ipairs   = ipairs
@@ -44,8 +45,8 @@ kbd.modifiers = {}
 
 kbd.codes = {
     q=24,  w=25, e=26, r=27, t=28, z=29, u=30, i=31, o=32,   p=33,  ["⌫"]=22, ["Alt"]=64, ["Mod4"]=133, ["Control"]=37, ["Alt"]=64, 
-    a=38,  s=39, d=40, f=41, g=42, h=43, j=44, k=45, l=46, ["?"]=59, Return=36,
-    Caps=66, y=52, x=53, c=54, v=55, b=56, n=57, m=58, Space=65, Delete=22, ["."]=60, ["Up"]=22,
+    a=38,  s=39, d=40, f=41, g=42, h=43, j=44, k=45, l=46, ["?"]=59, ["Return"]=36,
+    Caps=66, y=52, x=53, c=54, v=55, b=56, n=57, m=58, ["Space"]=65, ["Delete"]=22, ["."]=60, ["Up"]=22, ["Shift"]=50
 }
 
 local function create_button_row(...)
@@ -71,12 +72,12 @@ local function create_button_row(...)
         end
             
         local ww = wibox.widget{
-            markup = "<span color='#aaaaaa'>" .. i .. "</span>",
-            align  = 'center',
-            valign = 'center',
-            forced_height = 60,
+            markup = "<span color=\"#aaaaaa\">" .. i .. "</span>",
+            align  = "center",
+            valign = "center",
+            forced_height = 50,
             font = "Droid Sans Mono Bold 11",
-            forced_width = 80, 
+            forced_width = 60, 
             widget = wibox.widget.textbox,
         }
         
@@ -94,25 +95,26 @@ local function create_button_row(...)
                 end,
 
                 function ()
-                    gears.debug.dump(kbd.modifiers)
-
-                    if(modifier == "Control" or modifier == "Alt" or modifier == "Mod4") 
+                    if(modifier == "Control" or modifier == "Alt" or modifier == "Mod4" or modifier == "Shift") 
                     then
-                        table.insert(kbd.modifiers, modifier)
-                        --great.key.execute({modifiers}, "w")
-                        --capi.fake_input("key_press",   kbd.codes[i])
+                        if not gtable.hasitem(kbd.modifiers, modifier)
+                        then
+                            great.util.spawn("notify-send '" .. "doesnt have item " .. modifier .. "'")
+                            table.insert(kbd.modifiers, modifier)
+                            for _,y in ipairs(kbd.modifiers) do  
+                        end
+                    end
+                        
                     elseif(is_emoji == false)
                     then
                         -- great.key.execute(kbd.modifiers, i)
                         ww.font = "Droid Sans Mono Bold 11"
                         w.bg = "#0f0f0f"
 
-                        --if(i == "Control" or i == "Alt" or i == "Mod4") then
                         if(kbd.modifiers ~= {})
                         then
                             for _, y in ipairs(kbd.modifiers) do
-                                capi.fake_input("key_press",  kbd.codes[y])    
-                                
+                                capi.fake_input("key_press",  kbd.codes[y])            
                             end
                         end
                         
@@ -130,7 +132,7 @@ local function create_button_row(...)
                         
                         kbd.modifiers = {}
                     else
-                        great.util.spawn("xdotool type " .. i ) -- fixme
+                        great.util.spawn("xdotool type " .. i) -- fixme
                         ww.font = "Droid Sans Mono Bold 11"
                         w.bg = "#0f0f0f"
                    end
@@ -151,13 +153,14 @@ setmetatable(_M, { __call = function (_, pos, scr, height)
             homogeneous   = true,
             spacing       = 2,
             min_cols_size = 10,
-            min_rows_size = 3,
+            min_rows_size = 30,
             layout        = wibox.layout.grid, 
         }
         
         local table1 = create_button_row("q", "w", "e", "r", "t", "z", "u", "i", "o", "p", "⌫") -- TODO: what to fix is obvious
-        local table2 = create_button_row("Caps", "a", "s", "d", "f", "g", "h", "j", "k", "l", ":", "?", "Return", "Up") 
-        local table3 = create_button_row({"Control", "modifier"}, {"Mod4", "modifier"}, {"Alt", "modifier"}, "y", "x", "c", "space", "v", "b", "n", "m", ".", "Left", "Down", "Right")
+        local table2 = create_button_row("Caps", "a", "s", "d", "f", "g", "h", "j", "k", "l", ":", "!", "Return", "Up") 
+        local table3 = create_button_row({"Shift", "modifier"}, "y", "x", "c", "v", "b", "n", "m", ",", ".", "-", {"Shift", "modifier"}, "Left", "Down", "Right")
+        local table4 = create_button_row({"Control", "modifier"}, {"Mod4", "modifier"}, {"Alt", "modifier"}, {"Space", "modifier"},{"Space", "modifier"},{"Space", "modifier"},{"Space", "modifier"})
         local emojitable = create_button_row({"😂", "emoji"}, {"🤔", "emoji"})
             
         for _,i in ipairs(table1) do
@@ -172,8 +175,11 @@ setmetatable(_M, { __call = function (_, pos, scr, height)
             l:add_widget_at(table3[_], 3, _, 1, 1)
         end
 
+        for _,i in ipairs(table4) do
+            l:add_widget_at(table4[_], 4, _, 1, 1)
+        end
+
         for _,i in ipairs(emojitable) do
-            --great.util.spawn("notify-send '" .. tostring(table.getn()) .. " lol'")
             l:add_widget_at(emojitable[_], 1, 9+5+_, 1, 1) -- TODO: get row length+x
         end
 
